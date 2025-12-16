@@ -11,6 +11,7 @@ import { PDV } from './pages/PDV'
 import { Mesas } from './pages/Mesas'
 import { Garcom } from './pages/Garcom'
 import { Comandas } from './pages/Comandas'
+import { AdminProdutos } from './pages/admin/Produtos'
 import { Landing } from './pages/public/Landing'
 import { Onboarding } from './pages/public/Onboarding'
 import { supabase } from './lib/supabase'
@@ -93,6 +94,7 @@ function App() {
             <Route path="pdv" element={<PDV />} />
             <Route path="mesas" element={<Mesas />} />
             <Route path="comandas" element={<Comandas />} />
+            <Route path="produtos" element={<AdminProdutos />} />
           </Route>
 
           {/* Dashboard por tenant - requer login */}

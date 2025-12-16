@@ -7,7 +7,8 @@ import {
     LogOut,
     ShoppingCart,
     QrCode,
-    UtensilsCrossed
+    UtensilsCrossed,
+    Package
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useTenant } from '../contexts/TenantContext'
@@ -18,6 +19,7 @@ const menuItems = [
     { path: '/pedidos', icon: ClipboardList, label: 'Pedidos' },
     { path: '/comandas', icon: UtensilsCrossed, label: 'Comandas' },
     { path: '/mesas', icon: QrCode, label: 'Mesas' },
+    { path: '/produtos', icon: Package, label: 'Produtos' },
     { path: '/clientes', icon: Users, label: 'Clientes' },
     { path: '/relatorios', icon: BarChart3, label: 'Relatórios' },
 ]
@@ -69,8 +71,8 @@ export function Sidebar() {
                                 <NavLink
                                     to={fullPath}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                            ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
-                                            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                        ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                                         }`}
                                     style={isActive ? { color: tenant?.cor_primaria || '#D4AF37' } : {}}
                                 >
