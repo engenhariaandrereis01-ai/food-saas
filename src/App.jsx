@@ -12,6 +12,7 @@ import { Mesas } from './pages/Mesas'
 import { Garcom } from './pages/Garcom'
 import { Comandas } from './pages/Comandas'
 import { supabase } from './lib/supabase'
+import { TenantProvider } from './contexts/TenantContext'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -36,7 +37,7 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
-          <span className="text-5xl">🍗👑</span>
+          <span className="text-5xl">🍽️</span>
           <p className="text-gray-400 mt-4">Carregando...</p>
         </div>
       </div>
@@ -44,30 +45,50 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Rota pública do Cardápio Digital */}
-        <Route path="/cardapio" element={<Cardapio />} />
+    <TenantProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* ========================================= */}
+          {/* ROTAS PÚBLICAS POR TENANT (/:slug/...)   */}
+          {/* ========================================= */}
 
-        {/* Rota pública do App do Garçom */}
-        <Route path="/garcom" element={<Garcom />} />
+          {/* Cardápio do restaurante */}
+          <Route path="/:slug/cardapio" element={<Cardapio />} />
 
-        {/* Rotas protegidas do Dashboard */}
-        {user ? (
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="pedidos" element={<Pedidos />} />
-            <Route path="clientes" element={<Clients />} />
-            <Route path="relatorios" element={<Reports />} />
-            <Route path="pdv" element={<PDV />} />
-            <Route path="mesas" element={<Mesas />} />
-            <Route path="comandas" element={<Comandas />} />
-          </Route>
-        ) : (
-          <Route path="*" element={<Login onLogin={setUser} />} />
-        )}
-      </Routes>
-    </BrowserRouter>
+          {/* App do Garçom */}
+          <Route path="/:slug/garcom" element={<Garcom />} />
+
+          {/* Rotas legadas (sem slug) - para compatibilidade */}
+          <Route path="/cardapio" element={<Cardapio />} />
+          <Route path="/garcom" element={<Garcom />} />
+
+          {/* ========================================= */}
+          {/* ROTAS PROTEGIDAS DO DASHBOARD            */}
+          {/* ========================================= */}
+
+          {user ? (
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="pedidos" element={<Pedidos />} />
+              <Route path="clientes" element={<Clients />} />
+              <Route path="relatorios" element={<Reports />} />
+              <Route path="pdv" element={<PDV />} />
+              <Route path="mesas" element={<Mesas />} />
+              <Route path="comandas" element={<Comandas />} />
+
+              {/* Rotas do dashboard por tenant */}
+              <Route path=":slug/dashboard" element={<Dashboard />} />
+              <Route path=":slug/pedidos" element={<Pedidos />} />
+              <Route path=":slug/pdv" element={<PDV />} />
+              <Route path=":slug/mesas" element={<Mesas />} />
+              <Route path=":slug/comandas" element={<Comandas />} />
+            </Route>
+          ) : (
+            <Route path="*" element={<Login onLogin={setUser} />} />
+          )}
+        </Routes>
+      </BrowserRouter>
+    </TenantProvider>
   )
 }
 
