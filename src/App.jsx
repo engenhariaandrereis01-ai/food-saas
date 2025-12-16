@@ -11,6 +11,8 @@ import { PDV } from './pages/PDV'
 import { Mesas } from './pages/Mesas'
 import { Garcom } from './pages/Garcom'
 import { Comandas } from './pages/Comandas'
+import { Landing } from './pages/public/Landing'
+import { Onboarding } from './pages/public/Onboarding'
 import { supabase } from './lib/supabase'
 import { TenantProvider } from './contexts/TenantContext'
 
@@ -49,6 +51,19 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* ========================================= */}
+          {/* ROTAS PÚBLICAS DO SAAS                   */}
+          {/* ========================================= */}
+
+          {/* Landing Page */}
+          <Route path="/" element={user ? null : <Landing />} />
+
+          {/* Onboarding - Cadastro de Restaurante */}
+          <Route path="/onboarding" element={<Onboarding />} />
+
+          {/* Login */}
+          <Route path="/login" element={<Login onLogin={setUser} />} />
+
+          {/* ========================================= */}
           {/* ROTAS PÚBLICAS POR TENANT (/:slug/...)   */}
           {/* ========================================= */}
 
@@ -66,25 +81,27 @@ function App() {
           {/* ROTAS PROTEGIDAS DO DASHBOARD            */}
           {/* ========================================= */}
 
-          {user ? (
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="pedidos" element={<Pedidos />} />
-              <Route path="clientes" element={<Clients />} />
-              <Route path="relatorios" element={<Reports />} />
-              <Route path="pdv" element={<PDV />} />
-              <Route path="mesas" element={<Mesas />} />
-              <Route path="comandas" element={<Comandas />} />
+          {user && (
+            <>
+              <Route path="/dashboard" element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="pedidos" element={<Pedidos />} />
+                <Route path="clientes" element={<Clients />} />
+                <Route path="relatorios" element={<Reports />} />
+                <Route path="pdv" element={<PDV />} />
+                <Route path="mesas" element={<Mesas />} />
+                <Route path="comandas" element={<Comandas />} />
+              </Route>
 
               {/* Rotas do dashboard por tenant */}
-              <Route path=":slug/dashboard" element={<Dashboard />} />
-              <Route path=":slug/pedidos" element={<Pedidos />} />
-              <Route path=":slug/pdv" element={<PDV />} />
-              <Route path=":slug/mesas" element={<Mesas />} />
-              <Route path=":slug/comandas" element={<Comandas />} />
-            </Route>
-          ) : (
-            <Route path="*" element={<Login onLogin={setUser} />} />
+              <Route path="/:slug/dashboard" element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="pedidos" element={<Pedidos />} />
+                <Route path="pdv" element={<PDV />} />
+                <Route path="mesas" element={<Mesas />} />
+                <Route path="comandas" element={<Comandas />} />
+              </Route>
+            </>
           )}
         </Routes>
       </BrowserRouter>
