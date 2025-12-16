@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { Dashboard } from './pages/Dashboard'
 import { Pedidos } from './pages/Pedidos'
@@ -54,8 +54,8 @@ function App() {
           {/* ROTAS PÚBLICAS DO SAAS                   */}
           {/* ========================================= */}
 
-          {/* Landing Page */}
-          <Route path="/" element={user ? null : <Landing />} />
+          {/* Landing Page - sempre acessível */}
+          <Route path="/" element={<Landing />} />
 
           {/* Onboarding - Cadastro de Restaurante */}
           <Route path="/onboarding" element={<Onboarding />} />
@@ -81,28 +81,34 @@ function App() {
           {/* ROTAS PROTEGIDAS DO DASHBOARD            */}
           {/* ========================================= */}
 
-          {user && (
-            <>
-              <Route path="/dashboard" element={<Layout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="pedidos" element={<Pedidos />} />
-                <Route path="clientes" element={<Clients />} />
-                <Route path="relatorios" element={<Reports />} />
-                <Route path="pdv" element={<PDV />} />
-                <Route path="mesas" element={<Mesas />} />
-                <Route path="comandas" element={<Comandas />} />
-              </Route>
+          {/* Dashboard principal - requer login */}
+          <Route
+            path="/dashboard/*"
+            element={user ? <Layout /> : <Navigate to="/login" replace />}
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="pedidos" element={<Pedidos />} />
+            <Route path="clientes" element={<Clients />} />
+            <Route path="relatorios" element={<Reports />} />
+            <Route path="pdv" element={<PDV />} />
+            <Route path="mesas" element={<Mesas />} />
+            <Route path="comandas" element={<Comandas />} />
+          </Route>
 
-              {/* Rotas do dashboard por tenant */}
-              <Route path="/:slug/dashboard" element={<Layout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="pedidos" element={<Pedidos />} />
-                <Route path="pdv" element={<PDV />} />
-                <Route path="mesas" element={<Mesas />} />
-                <Route path="comandas" element={<Comandas />} />
-              </Route>
-            </>
-          )}
+          {/* Dashboard por tenant - requer login */}
+          <Route
+            path="/:slug/dashboard/*"
+            element={user ? <Layout /> : <Navigate to="/login" replace />}
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="pedidos" element={<Pedidos />} />
+            <Route path="pdv" element={<PDV />} />
+            <Route path="mesas" element={<Mesas />} />
+            <Route path="comandas" element={<Comandas />} />
+          </Route>
+
+          {/* Fallback - redireciona para Landing */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </TenantProvider>
