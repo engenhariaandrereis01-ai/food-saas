@@ -10,7 +10,8 @@ import {
     UtensilsCrossed,
     Package,
     FolderOpen,
-    Settings
+    Settings,
+    CreditCard
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
@@ -21,6 +22,7 @@ const menuItems = [
     { path: '/produtos', icon: Package, label: 'Produtos' },
     { path: '/categorias', icon: FolderOpen, label: 'Categorias' },
     { path: '/configuracoes', icon: Settings, label: 'Configurações' },
+    { path: '/billing', icon: CreditCard, label: 'Planos' },
 ]
 
 export function Sidebar() {
