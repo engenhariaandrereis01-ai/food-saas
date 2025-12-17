@@ -16,6 +16,7 @@ import { AdminCategorias } from './pages/admin/Categorias'
 import { CardapioPublico } from './pages/public/CardapioPublico'
 import { Checkout } from './pages/public/Checkout'
 import { AdminPedidos } from './pages/admin/Pedidos'
+import { Configuracoes } from './pages/admin/Configuracoes'
 import { Landing } from './pages/public/Landing'
 import { Onboarding } from './pages/public/Onboarding'
 import { supabase } from './lib/supabase'
@@ -103,6 +104,7 @@ function App() {
             <Route path="comandas" element={<Comandas />} />
             <Route path="produtos" element={<AdminProdutos />} />
             <Route path="categorias" element={<AdminCategorias />} />
+            <Route path="configuracoes" element={<Configuracoes />} />
           </Route>
 
           {/* Dashboard por tenant - requer login */}

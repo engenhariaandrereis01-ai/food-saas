@@ -9,7 +9,8 @@ import {
     QrCode,
     UtensilsCrossed,
     Package,
-    FolderOpen
+    FolderOpen,
+    Settings
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
@@ -19,6 +20,7 @@ const menuItems = [
     { path: '/pedidos', icon: ClipboardList, label: 'Pedidos' },
     { path: '/produtos', icon: Package, label: 'Produtos' },
     { path: '/categorias', icon: FolderOpen, label: 'Categorias' },
+    { path: '/configuracoes', icon: Settings, label: 'Configurações' },
 ]
 
 export function Sidebar() {
