@@ -13,6 +13,7 @@ import { Garcom } from './pages/Garcom'
 import { Comandas } from './pages/Comandas'
 import { AdminProdutos } from './pages/admin/Produtos'
 import { AdminCategorias } from './pages/admin/Categorias'
+import { CardapioPublico } from './pages/public/CardapioPublico'
 import { Landing } from './pages/public/Landing'
 import { Onboarding } from './pages/public/Onboarding'
 import { supabase } from './lib/supabase'
@@ -70,7 +71,7 @@ function App() {
           {/* ========================================= */}
 
           {/* Cardápio do restaurante */}
-          <Route path="/:slug/cardapio" element={<Cardapio />} />
+          <Route path="/:slug/cardapio" element={<CardapioPublico />} />
 
           {/* App do Garçom */}
           <Route path="/:slug/garcom" element={<Garcom />} />
