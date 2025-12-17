@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 
 export function AdminProdutos() {
+    console.log('=== AdminProdutos MONTADO ===')
     const { tenantId: contextTenantId, tenant, loading: tenantLoading } = useTenant()
     const [produtos, setProdutos] = useState([])
     const [categorias, setCategorias] = useState([])
@@ -71,31 +72,40 @@ export function AdminProdutos() {
     // Carregar dados quando tiver tenantId
     useEffect(() => {
         if (tenantId) {
-            carregarDados()
+            console.log('TenantId disponível:', tenantId)
+            carregarDados(tenantId)
         }
     }, [tenantId])
 
-    const carregarDados = async () => {
+    const carregarDados = async (tid) => {
+        console.log('Carregando dados para tenant:', tid)
         setLoading(true)
 
-        // Carregar categorias
-        const { data: cats } = await supabase
-            .from('categorias')
-            .select('*')
-            .eq('tenant_id', tenantId)
-            .order('ordem')
+        try {
+            // Carregar categorias
+            const { data: cats, error: catsError } = await supabase
+                .from('categorias')
+                .select('*')
+                .eq('tenant_id', tid)
+                .order('ordem')
 
-        setCategorias(cats || [])
+            console.log('Categorias:', cats, 'Erro:', catsError)
+            setCategorias(cats || [])
 
-        // Carregar produtos
-        const { data: prods } = await supabase
-            .from('produtos')
-            .select('*, categorias(nome)')
-            .eq('tenant_id', tenantId)
-            .order('nome')
+            // Carregar produtos
+            const { data: prods, error: prodsError } = await supabase
+                .from('produtos')
+                .select('*, categorias(nome)')
+                .eq('tenant_id', tid)
+                .order('nome')
 
-        setProdutos(prods || [])
-        setLoading(false)
+            console.log('Produtos:', prods, 'Erro:', prodsError)
+            setProdutos(prods || [])
+        } catch (err) {
+            console.error('Erro ao carregar dados:', err)
+        } finally {
+            setLoading(false)
+        }
     }
 
     // Abrir modal para novo produto
