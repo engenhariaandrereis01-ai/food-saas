@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { Search, ShoppingBag, MapPin, Clock, Phone, X } from 'lucide-react'
+import { useCarrinho } from '../../hooks/useCarrinho'
+import { Carrinho, BotaoCarrinho } from '../../components/Carrinho'
+import { Search, ShoppingBag, MapPin, Clock, Phone, X, Plus, Minus } from 'lucide-react'
 
 export function CardapioPublico() {
     const { slug } = useParams()
+    const navigate = useNavigate()
     const [tenant, setTenant] = useState(null)
     const [categorias, setCategorias] = useState([])
     const [produtos, setProdutos] = useState([])
@@ -13,12 +16,15 @@ export function CardapioPublico() {
     const [search, setSearch] = useState('')
     const [categoriaAtiva, setCategoriaAtiva] = useState(null)
     const [produtoSelecionado, setProdutoSelecionado] = useState(null)
+    const [carrinhoAberto, setCarrinhoAberto] = useState(false)
+
+    // Hook do carrinho
+    const carrinho = useCarrinho(tenant?.id)
 
     // Carregar dados do tenant
     useEffect(() => {
         const loadData = async () => {
             try {
-                // 1. Buscar tenant pelo slug
                 const { data: tenantData, error: tenantError } = await supabase
                     .from('tenants')
                     .select('*')
@@ -34,7 +40,6 @@ export function CardapioPublico() {
 
                 setTenant(tenantData)
 
-                // 2. Buscar categorias
                 const { data: cats } = await supabase
                     .from('categorias')
                     .select('*')
@@ -44,7 +49,6 @@ export function CardapioPublico() {
 
                 setCategorias(cats || [])
 
-                // 3. Buscar produtos
                 const { data: prods } = await supabase
                     .from('produtos')
                     .select('*, categorias(nome)')
@@ -53,7 +57,6 @@ export function CardapioPublico() {
                     .order('nome')
 
                 setProdutos(prods || [])
-
             } catch (err) {
                 console.error('Erro:', err)
                 setError('Erro ao carregar cardápio')
@@ -65,7 +68,7 @@ export function CardapioPublico() {
         if (slug) loadData()
     }, [slug])
 
-    // Filtrar produtos por busca e categoria
+    // Filtrar produtos
     const produtosFiltrados = produtos.filter(p => {
         const matchSearch = p.nome.toLowerCase().includes(search.toLowerCase()) ||
             p.descricao?.toLowerCase().includes(search.toLowerCase())
@@ -73,19 +76,19 @@ export function CardapioPublico() {
         return matchSearch && matchCategoria
     })
 
-    // Agrupar produtos por categoria
     const produtosPorCategoria = categorias.reduce((acc, cat) => {
         const prods = produtosFiltrados.filter(p => p.categoria_id === cat.id)
-        if (prods.length > 0) {
-            acc.push({ categoria: cat, produtos: prods })
-        }
+        if (prods.length > 0) acc.push({ categoria: cat, produtos: prods })
         return acc
     }, [])
 
-    // Produtos sem categoria
     const produtosSemCategoria = produtosFiltrados.filter(p => !p.categoria_id)
 
-    // Loading
+    const irParaCheckout = () => {
+        setCarrinhoAberto(false)
+        navigate(`/${slug}/checkout`)
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -94,7 +97,6 @@ export function CardapioPublico() {
         )
     }
 
-    // Erro
     if (error) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -110,7 +112,7 @@ export function CardapioPublico() {
     const corPrimaria = tenant?.cor_primaria || '#D4AF37'
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <div className="min-h-screen bg-[#0a0a0a] text-white pb-24">
             {/* Header */}
             <header className="sticky top-0 z-40 bg-[#1a1a1a] border-b border-gray-800">
                 <div className="max-w-4xl mx-auto px-4 py-4">
@@ -149,16 +151,13 @@ export function CardapioPublico() {
                 </div>
             </div>
 
-            {/* Categorias (scroll horizontal) */}
+            {/* Categorias */}
             {categorias.length > 0 && (
                 <div className="sticky top-[140px] z-20 bg-[#0a0a0a] py-3 px-4 border-b border-gray-800 overflow-x-auto">
                     <div className="max-w-4xl mx-auto flex gap-2">
                         <button
                             onClick={() => setCategoriaAtiva(null)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${!categoriaAtiva
-                                    ? 'text-black'
-                                    : 'bg-gray-800 text-gray-300 hover:text-white'
-                                }`}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${!categoriaAtiva ? 'text-black' : 'bg-gray-800 text-gray-300'}`}
                             style={!categoriaAtiva ? { backgroundColor: corPrimaria } : {}}
                         >
                             Todos
@@ -167,10 +166,7 @@ export function CardapioPublico() {
                             <button
                                 key={cat.id}
                                 onClick={() => setCategoriaAtiva(cat.id)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${categoriaAtiva === cat.id
-                                        ? 'text-black'
-                                        : 'bg-gray-800 text-gray-300 hover:text-white'
-                                    }`}
+                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${categoriaAtiva === cat.id ? 'text-black' : 'bg-gray-800 text-gray-300'}`}
                                 style={categoriaAtiva === cat.id ? { backgroundColor: corPrimaria } : {}}
                             >
                                 {cat.nome}
@@ -189,7 +185,6 @@ export function CardapioPublico() {
                     </div>
                 ) : (
                     <div className="space-y-8">
-                        {/* Por categoria */}
                         {produtosPorCategoria.map(({ categoria, produtos }) => (
                             <section key={categoria.id}>
                                 <h2 className="text-xl font-bold mb-4" style={{ color: corPrimaria }}>{categoria.nome}</h2>
@@ -199,14 +194,14 @@ export function CardapioPublico() {
                                             key={produto.id}
                                             produto={produto}
                                             corPrimaria={corPrimaria}
-                                            onClick={() => setProdutoSelecionado(produto)}
+                                            onDetalhes={() => setProdutoSelecionado(produto)}
+                                            onAdicionar={() => carrinho.adicionar(produto)}
                                         />
                                     ))}
                                 </div>
                             </section>
                         ))}
 
-                        {/* Sem categoria */}
                         {produtosSemCategoria.length > 0 && (
                             <section>
                                 <h2 className="text-xl font-bold mb-4" style={{ color: corPrimaria }}>Outros</h2>
@@ -216,7 +211,8 @@ export function CardapioPublico() {
                                             key={produto.id}
                                             produto={produto}
                                             corPrimaria={corPrimaria}
-                                            onClick={() => setProdutoSelecionado(produto)}
+                                            onDetalhes={() => setProdutoSelecionado(produto)}
+                                            onAdicionar={() => carrinho.adicionar(produto)}
                                         />
                                     ))}
                                 </div>
@@ -229,16 +225,33 @@ export function CardapioPublico() {
             {/* Footer */}
             <footer className="bg-[#1a1a1a] border-t border-gray-800 py-6 mt-12">
                 <div className="max-w-4xl mx-auto px-4 text-center">
-                    <p className="text-gray-400 text-sm">
-                        {tenant.whatsapp && (
-                            <a href={`https://wa.me/${tenant.whatsapp}`} className="flex items-center justify-center gap-2 hover:text-white">
-                                <Phone size={16} /> {tenant.whatsapp}
-                            </a>
-                        )}
-                    </p>
+                    {tenant.whatsapp && (
+                        <a href={`https://wa.me/${tenant.whatsapp}`} className="flex items-center justify-center gap-2 text-gray-400 hover:text-white">
+                            <Phone size={16} /> {tenant.whatsapp}
+                        </a>
+                    )}
                     <p className="text-gray-600 text-xs mt-4">Powered by Food SaaS</p>
                 </div>
             </footer>
+
+            {/* Botão Flutuante do Carrinho */}
+            <BotaoCarrinho
+                quantidade={carrinho.quantidadeTotal}
+                onClick={() => setCarrinhoAberto(true)}
+                corPrimaria={corPrimaria}
+            />
+
+            {/* Drawer do Carrinho */}
+            <Carrinho
+                isOpen={carrinhoAberto}
+                onClose={() => setCarrinhoAberto(false)}
+                itens={carrinho.itens}
+                total={carrinho.total}
+                onAtualizarQuantidade={carrinho.atualizarQuantidade}
+                onRemover={carrinho.remover}
+                onCheckout={irParaCheckout}
+                corPrimaria={corPrimaria}
+            />
 
             {/* Modal de Produto */}
             {produtoSelecionado && (
@@ -246,98 +259,97 @@ export function CardapioPublico() {
                     produto={produtoSelecionado}
                     corPrimaria={corPrimaria}
                     onClose={() => setProdutoSelecionado(null)}
+                    onAdicionar={(qtd) => {
+                        carrinho.adicionar(produtoSelecionado, qtd)
+                        setProdutoSelecionado(null)
+                    }}
                 />
             )}
         </div>
     )
 }
 
-// Componente Card de Produto
-function ProdutoCard({ produto, corPrimaria, onClick }) {
+// Card de Produto com botão de adicionar
+function ProdutoCard({ produto, corPrimaria, onDetalhes, onAdicionar }) {
     return (
-        <div
-            onClick={onClick}
-            className="flex gap-4 p-4 bg-[#1a1a1a] rounded-xl border border-gray-800 cursor-pointer hover:border-gray-700 transition"
-        >
-            <div className="flex-1">
+        <div className="flex gap-4 p-4 bg-[#1a1a1a] rounded-xl border border-gray-800">
+            <div className="flex-1 cursor-pointer" onClick={onDetalhes}>
                 <h3 className="font-bold text-white mb-1">{produto.nome}</h3>
-                {produto.descricao && (
-                    <p className="text-gray-400 text-sm line-clamp-2 mb-2">{produto.descricao}</p>
-                )}
-                <div className="flex items-center gap-2">
-                    {produto.preco_promocional ? (
-                        <>
-                            <span className="text-gray-500 line-through text-sm">R$ {produto.preco?.toFixed(2)}</span>
-                            <span className="font-bold" style={{ color: corPrimaria }}>R$ {produto.preco_promocional?.toFixed(2)}</span>
-                        </>
-                    ) : (
-                        <span className="font-bold" style={{ color: corPrimaria }}>R$ {produto.preco?.toFixed(2)}</span>
-                    )}
-                </div>
+                {produto.descricao && <p className="text-gray-400 text-sm line-clamp-2 mb-2">{produto.descricao}</p>}
+                <span className="font-bold" style={{ color: corPrimaria }}>
+                    R$ {(produto.preco_promocional || produto.preco)?.toFixed(2)}
+                </span>
             </div>
-            {produto.imagem_url && (
-                <img
-                    src={produto.imagem_url}
-                    alt={produto.nome}
-                    className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
-                />
-            )}
+            <div className="flex flex-col items-end gap-2">
+                {produto.imagem_url && (
+                    <img src={produto.imagem_url} alt={produto.nome} className="w-20 h-20 rounded-lg object-cover" />
+                )}
+                <button
+                    onClick={(e) => { e.stopPropagation(); onAdicionar(); }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-black"
+                    style={{ backgroundColor: corPrimaria }}
+                >
+                    <Plus size={18} />
+                </button>
+            </div>
         </div>
     )
 }
 
-// Modal de Detalhes do Produto
-function ModalProduto({ produto, corPrimaria, onClose }) {
+// Modal com seletor de quantidade
+function ModalProduto({ produto, corPrimaria, onClose, onAdicionar }) {
+    const [quantidade, setQuantidade] = useState(1)
+
     return (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-end md:items-center justify-center">
             <div className="bg-[#1a1a1a] w-full max-w-lg rounded-t-2xl md:rounded-2xl max-h-[90vh] overflow-y-auto">
-                {/* Imagem */}
                 {produto.imagem_url && (
                     <div className="relative aspect-video">
                         <img src={produto.imagem_url} alt={produto.nome} className="w-full h-full object-cover" />
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center"
-                        >
+                        <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center">
                             <X size={20} />
                         </button>
                     </div>
                 )}
 
-                {/* Info */}
                 <div className="p-6">
                     {!produto.imagem_url && (
-                        <button onClick={onClose} className="absolute top-4 right-4">
-                            <X size={24} />
-                        </button>
+                        <button onClick={onClose} className="absolute top-4 right-4"><X size={24} /></button>
                     )}
 
                     <h2 className="text-2xl font-bold text-white mb-2">{produto.nome}</h2>
-                    {produto.descricao && (
-                        <p className="text-gray-400 mb-4">{produto.descricao}</p>
-                    )}
+                    {produto.descricao && <p className="text-gray-400 mb-4">{produto.descricao}</p>}
 
                     <div className="flex items-center gap-3 mb-6">
-                        {produto.preco_promocional ? (
-                            <>
-                                <span className="text-gray-500 line-through text-lg">R$ {produto.preco?.toFixed(2)}</span>
-                                <span className="text-2xl font-bold" style={{ color: corPrimaria }}>
-                                    R$ {produto.preco_promocional?.toFixed(2)}
-                                </span>
-                            </>
-                        ) : (
-                            <span className="text-2xl font-bold" style={{ color: corPrimaria }}>
-                                R$ {produto.preco?.toFixed(2)}
-                            </span>
-                        )}
+                        <span className="text-2xl font-bold" style={{ color: corPrimaria }}>
+                            R$ {(produto.preco_promocional || produto.preco)?.toFixed(2)}
+                        </span>
+                    </div>
+
+                    {/* Seletor de quantidade */}
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                        <button
+                            onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
+                            className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center"
+                        >
+                            <Minus size={20} />
+                        </button>
+                        <span className="text-2xl font-bold w-12 text-center">{quantidade}</span>
+                        <button
+                            onClick={() => setQuantidade(quantidade + 1)}
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-black"
+                            style={{ backgroundColor: corPrimaria }}
+                        >
+                            <Plus size={20} />
+                        </button>
                     </div>
 
                     <button
-                        onClick={onClose}
-                        className="w-full py-4 rounded-xl font-bold text-black transition hover:opacity-90"
+                        onClick={() => onAdicionar(quantidade)}
+                        className="w-full py-4 rounded-xl font-bold text-black text-lg transition hover:opacity-90"
                         style={{ backgroundColor: corPrimaria }}
                     >
-                        Fechar
+                        Adicionar R$ {((produto.preco_promocional || produto.preco) * quantidade).toFixed(2)}
                     </button>
                 </div>
             </div>

@@ -14,6 +14,8 @@ import { Comandas } from './pages/Comandas'
 import { AdminProdutos } from './pages/admin/Produtos'
 import { AdminCategorias } from './pages/admin/Categorias'
 import { CardapioPublico } from './pages/public/CardapioPublico'
+import { Checkout } from './pages/public/Checkout'
+import { AdminPedidos } from './pages/admin/Pedidos'
 import { Landing } from './pages/public/Landing'
 import { Onboarding } from './pages/public/Onboarding'
 import { supabase } from './lib/supabase'
@@ -73,6 +75,9 @@ function App() {
           {/* Cardápio do restaurante */}
           <Route path="/:slug/cardapio" element={<CardapioPublico />} />
 
+          {/* Checkout */}
+          <Route path="/:slug/checkout" element={<Checkout />} />
+
           {/* App do Garçom */}
           <Route path="/:slug/garcom" element={<Garcom />} />
 
@@ -90,7 +95,7 @@ function App() {
             element={user ? <Layout /> : <Navigate to="/login" replace />}
           >
             <Route index element={<Dashboard />} />
-            <Route path="pedidos" element={<Pedidos />} />
+            <Route path="pedidos" element={<AdminPedidos />} />
             <Route path="clientes" element={<Clients />} />
             <Route path="relatorios" element={<Reports />} />
             <Route path="pdv" element={<PDV />} />

@@ -13,9 +13,10 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-// Menu simplificado - apenas Produtos e Categorias por agora
+// Menu simplificado
 const menuItems = [
     { path: '', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/pedidos', icon: ClipboardList, label: 'Pedidos' },
     { path: '/produtos', icon: Package, label: 'Produtos' },
     { path: '/categorias', icon: FolderOpen, label: 'Categorias' },
 ]
