@@ -3,131 +3,53 @@ import { supabase } from '../lib/supabase'
 
 const TenantContext = createContext(null)
 
+/**
+ * TenantProvider Simplificado
+ * 
+ * Este provider:
+ * - Não quebra se falhar ao buscar tenant
+ * - Retorna valores default se não encontrar
+ * - É tolerante a erros
+ */
 export function TenantProvider({ children }) {
     const [tenant, setTenant] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
 
-    // Detectar tenant pelo slug na URL
-    const detectTenantFromUrl = () => {
-        const pathParts = window.location.pathname.split('/')
-        // URL pattern: /:slug/cardapio or /:slug/garcom
-        if (pathParts.length >= 2 && pathParts[1]) {
-            const potentialSlug = pathParts[1]
-            // Ignorar rotas conhecidas que não são slugs
-            const knownRoutes = ['login', 'register', 'admin', 'dashboard', 'onboarding']
-            if (!knownRoutes.includes(potentialSlug)) {
-                return potentialSlug
-            }
-        }
-        return null
-    }
-
-    // Carregar tenant pelo slug
-    const loadTenantBySlug = async (slug) => {
-        try {
-            setLoading(true)
-            setError(null)
-
-            const { data, error: fetchError } = await supabase
-                .from('tenants')
-                .select('*')
-                .eq('slug', slug)
-                .eq('ativo', true)
-                .single()
-
-            if (fetchError) {
-                console.error('Erro ao carregar tenant:', fetchError)
-                setError('Restaurante não encontrado')
-                setTenant(null)
-            } else {
-                setTenant(data)
-                // Aplicar cores do tenant
-                applyTenantTheme(data)
-            }
-        } catch (err) {
-            console.error('Erro:', err)
-            setError('Erro ao carregar restaurante')
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // Carregar tenant pelo ID do usuário logado
-    const loadTenantByUser = async (userId) => {
-        try {
-            setLoading(true)
-
-            const { data: userTenant, error: userError } = await supabase
-                .from('usuarios_tenant')
-                .select('tenant_id, tenants(*)')
-                .eq('user_id', userId)
-                .single()
-
-            if (userError) {
-                console.error('Usuário não associado a tenant:', userError)
-                setTenant(null)
-            } else if (userTenant?.tenants) {
-                setTenant(userTenant.tenants)
-                applyTenantTheme(userTenant.tenants)
-            }
-        } catch (err) {
-            console.error('Erro:', err)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // Aplicar tema/cores do tenant
-    const applyTenantTheme = (tenantData) => {
-        if (!tenantData) return
-
-        const root = document.documentElement
-        root.style.setProperty('--cor-primaria', tenantData.cor_primaria || '#D4AF37')
-        root.style.setProperty('--cor-secundaria', tenantData.cor_secundaria || '#1a1a1a')
-
-        // Atualizar título da página
-        if (tenantData.nome) {
-            document.title = tenantData.nome
-        }
-
-        // Atualizar favicon se houver logo
-        if (tenantData.logo_url) {
-            const favicon = document.querySelector('link[rel="icon"]')
-            if (favicon) {
-                favicon.href = tenantData.logo_url
-            }
-        }
-    }
-
-    // Efeito inicial: detectar tenant
     useEffect(() => {
-        const slug = detectTenantFromUrl()
+        const loadTenant = async () => {
+            try {
+                // Verificar se há usuário logado
+                const { data: { user } } = await supabase.auth.getUser()
 
-        if (slug) {
-            loadTenantBySlug(slug)
-        } else {
-            // Verificar se há usuário logado
-            supabase.auth.getSession().then(({ data: { session } }) => {
-                if (session?.user) {
-                    loadTenantByUser(session.user.id)
-                } else {
+                if (!user) {
                     setLoading(false)
+                    return
                 }
-            })
-        }
-    }, [])
 
-    // Escutar mudanças de autenticação
-    useEffect(() => {
+                // Buscar tenant do usuário
+                const { data } = await supabase
+                    .from('usuarios_tenant')
+                    .select('tenant_id, tenants(*)')
+                    .eq('user_id', user.id)
+                    .limit(1)
+
+                if (data?.[0]?.tenants) {
+                    setTenant(data[0].tenants)
+                }
+            } catch (err) {
+                console.error('[TenantContext] Erro ao carregar tenant:', err)
+                // NÃO quebra - apenas não tem tenant
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        loadTenant()
+
+        // Escutar mudanças de auth
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (event === 'SIGNED_IN' && session?.user) {
-                    const slug = detectTenantFromUrl()
-                    if (!slug) {
-                        loadTenantByUser(session.user.id)
-                    }
-                } else if (event === 'SIGNED_OUT') {
+            (event) => {
+                if (event === 'SIGNED_OUT') {
                     setTenant(null)
                 }
             }
@@ -136,18 +58,14 @@ export function TenantProvider({ children }) {
         return () => subscription.unsubscribe()
     }, [])
 
+    // Valores seguros - sempre retorna algo, nunca undefined
     const value = {
-        tenant,
+        tenant: tenant || null,
+        tenantId: tenant?.id || null,
+        tenantSlug: tenant?.slug || null,
+        tenantNome: tenant?.nome || 'Restaurante',
         loading,
-        error,
-        tenantId: tenant?.id,
-        tenantSlug: tenant?.slug,
-        tenantNome: tenant?.nome,
-        isLoaded: !loading,
-        refreshTenant: () => {
-            const slug = detectTenantFromUrl()
-            if (slug) loadTenantBySlug(slug)
-        }
+        isLoaded: !loading
     }
 
     return (
@@ -159,9 +77,19 @@ export function TenantProvider({ children }) {
 
 export function useTenant() {
     const context = useContext(TenantContext)
+
+    // Retorna valores default se não houver context
     if (!context) {
-        throw new Error('useTenant deve ser usado dentro de TenantProvider')
+        return {
+            tenant: null,
+            tenantId: null,
+            tenantSlug: null,
+            tenantNome: 'Restaurante',
+            loading: false,
+            isLoaded: true
+        }
     }
+
     return context
 }
 

@@ -1,209 +1,139 @@
 import { useState, useEffect } from 'react'
-import { Header } from '../components/Header'
-import { MetricCard } from '../components/MetricCard'
-import { StatusBadge } from '../components/StatusBadge'
 import { supabase } from '../lib/supabase'
-import {
-    ShoppingBag,
-    DollarSign,
-    TrendingUp,
-    Clock,
-    ChevronRight
-} from 'lucide-react'
+import { Package, FolderOpen, TrendingUp, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer
-} from 'recharts'
 
 export function Dashboard() {
-    const [metrics, setMetrics] = useState({
-        totalPedidos: 0,
-        faturamento: 0,
-        ticketMedio: 0,
-        pendentes: 0,
-    })
-    const [recentOrders, setRecentOrders] = useState([])
-    const [hourlyData, setHourlyData] = useState([])
+    const [stats, setStats] = useState({ produtos: 0, categorias: 0 })
+    const [tenantNome, setTenantNome] = useState('Seu Restaurante')
     const [loading, setLoading] = useState(true)
 
-    const fetchData = async () => {
-        setLoading(true)
-
-        // Buscar pedidos de hoje
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-
-        const { data: pedidos } = await supabase
-            .from('pedidos')
-            .select('*')
-            .gte('created_at', today.toISOString())
-            .order('created_at', { ascending: false })
-
-        if (pedidos) {
-            const totalPedidos = pedidos.length
-            const faturamento = pedidos.reduce((sum, p) => sum + (parseFloat(p.valor_total) || 0), 0)
-            const ticketMedio = totalPedidos > 0 ? faturamento / totalPedidos : 0
-            const pendentes = pedidos.filter(p => p.status === 'pendente').length
-
-            setMetrics({ totalPedidos, faturamento, ticketMedio, pendentes })
-            setRecentOrders(pedidos.slice(0, 5))
-
-            // Dados por hora
-            const hourCounts = {}
-            for (let i = 19; i <= 23; i++) {
-                hourCounts[i] = 0
-            }
-            pedidos.forEach(p => {
-                const hour = new Date(p.created_at).getHours()
-                if (hourCounts[hour] !== undefined) {
-                    hourCounts[hour]++
-                }
-            })
-            setHourlyData(
-                Object.entries(hourCounts).map(([hora, pedidos]) => ({
-                    hora: `${hora}h`,
-                    pedidos
-                }))
-            )
-        }
-
-        setLoading(false)
-    }
-
     useEffect(() => {
-        fetchData()
+        const init = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) { setLoading(false); return }
 
-        // Realtime subscription
-        const channel = supabase
-            .channel('pedidos-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
-                fetchData()
-            })
-            .subscribe()
+                // Buscar tenant
+                const { data: ut } = await supabase
+                    .from('usuarios_tenant')
+                    .select('tenant_id, tenants(nome)')
+                    .eq('user_id', user.id)
+                    .limit(1)
 
-        return () => {
-            supabase.removeChannel(channel)
+                if (ut?.[0]?.tenants?.nome) {
+                    setTenantNome(ut[0].tenants.nome)
+                }
+
+                const tenantId = ut?.[0]?.tenant_id
+                if (!tenantId) { setLoading(false); return }
+
+                // Contar produtos e categorias
+                const [prodRes, catRes] = await Promise.all([
+                    supabase.from('produtos').select('id', { count: 'exact' }).eq('tenant_id', tenantId),
+                    supabase.from('categorias').select('id', { count: 'exact' }).eq('tenant_id', tenantId)
+                ])
+
+                setStats({
+                    produtos: prodRes.count || 0,
+                    categorias: catRes.count || 0
+                })
+            } catch (err) {
+                console.error('Erro:', err)
+            } finally {
+                setLoading(false)
+            }
         }
+        init()
     }, [])
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value)
-    }
-
-    const formatTime = (dateString) => {
-        return new Date(dateString).toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
-        })
-    }
-
     return (
-        <div className="min-h-screen">
-            <Header title="Dashboard" onRefresh={fetchData} />
+        <div className="p-6">
+            {/* Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-white mb-2">Olá! 👋</h1>
+                <p className="text-gray-400">Bem-vindo ao painel de <span className="text-[#D4AF37]">{tenantNome}</span></p>
+            </div>
 
-            <div className="p-6 space-y-6">
-                {/* Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <MetricCard
-                        title="Pedidos Hoje"
-                        value={metrics.totalPedidos}
-                        icon={ShoppingBag}
-                        color="gold"
-                    />
-                    <MetricCard
-                        title="Faturamento"
-                        value={formatCurrency(metrics.faturamento)}
-                        icon={DollarSign}
-                        color="green"
-                    />
-                    <MetricCard
-                        title="Ticket Médio"
-                        value={formatCurrency(metrics.ticketMedio)}
-                        icon={TrendingUp}
-                        color="blue"
-                    />
-                    <MetricCard
-                        title="Pendentes"
-                        value={metrics.pendentes}
-                        icon={Clock}
-                        color={metrics.pendentes > 0 ? 'red' : 'gold'}
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Chart */}
-                    <div className="lg:col-span-2 bg-card rounded-xl p-6 border border-gray-800">
-                        <h3 className="text-lg font-semibold mb-4">Pedidos por Hora</h3>
-                        <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={hourlyData}>
-                                    <defs>
-                                        <linearGradient id="colorPedidos" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <XAxis dataKey="hora" stroke="#6b7280" />
-                                    <YAxis stroke="#6b7280" />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#1a1a1a',
-                                            border: '1px solid #333',
-                                            borderRadius: '8px'
-                                        }}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="pedidos"
-                                        stroke="#D4AF37"
-                                        fillOpacity={1}
-                                        fill="url(#colorPedidos)"
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-800">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center">
+                            <Package className="text-[#D4AF37]" size={24} />
                         </div>
-                    </div>
-
-                    {/* Recent Orders */}
-                    <div className="bg-card rounded-xl p-6 border border-gray-800">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Últimos Pedidos</h3>
-                            <Link to="/pedidos" className="text-gold text-sm hover:underline flex items-center gap-1">
-                                Ver todos <ChevronRight size={16} />
-                            </Link>
-                        </div>
-
-                        <div className="space-y-3">
-                            {recentOrders.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">Nenhum pedido hoje</p>
-                            ) : (
-                                recentOrders.map((order) => (
-                                    <div
-                                        key={order.id}
-                                        className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
-                                    >
-                                        <div>
-                                            <p className="font-medium text-sm">#{order.id}</p>
-                                            <p className="text-gray-400 text-xs">{formatTime(order.created_at)}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-medium text-sm">{formatCurrency(order.valor_total || 0)}</p>
-                                            <StatusBadge status={order.status} />
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+                        <div>
+                            <p className="text-gray-400 text-sm">Produtos</p>
+                            <p className="text-2xl font-bold text-white">{loading ? '...' : stats.produtos}</p>
                         </div>
                     </div>
                 </div>
+
+                <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-800">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                            <FolderOpen className="text-blue-400" size={24} />
+                        </div>
+                        <div>
+                            <p className="text-gray-400 text-sm">Categorias</p>
+                            <p className="text-2xl font-bold text-white">{loading ? '...' : stats.categorias}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-800">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                            <TrendingUp className="text-green-400" size={24} />
+                        </div>
+                        <div>
+                            <p className="text-gray-400 text-sm">Status</p>
+                            <p className="text-lg font-bold text-green-400">Ativo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-gray-800">
+                <h2 className="text-xl font-bold text-white mb-4">Ações Rápidas</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link
+                        to="/dashboard/produtos"
+                        className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition"
+                    >
+                        <div className="w-10 h-10 rounded-lg bg-[#D4AF37]/20 flex items-center justify-center">
+                            <Plus className="text-[#D4AF37]" size={20} />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-white">Adicionar Produto</p>
+                            <p className="text-sm text-gray-400">Cadastre novos produtos</p>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to="/dashboard/categorias"
+                        className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition"
+                    >
+                        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <Plus className="text-blue-400" size={20} />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-white">Adicionar Categoria</p>
+                            <p className="text-sm text-gray-400">Organize seus produtos</p>
+                        </div>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Help Section */}
+            <div className="mt-8 bg-gradient-to-r from-[#D4AF37]/10 to-transparent rounded-xl p-6 border border-[#D4AF37]/20">
+                <h3 className="text-lg font-bold text-[#D4AF37] mb-2">🚀 Próximos Passos</h3>
+                <ul className="text-gray-300 space-y-2">
+                    <li>1. Crie suas <strong>categorias</strong> (ex: Bebidas, Pizzas, Sobremesas)</li>
+                    <li>2. Adicione seus <strong>produtos</strong> com fotos e preços</li>
+                    <li>3. Compartilhe seu cardápio digital com seus clientes!</li>
+                </ul>
             </div>
         </div>
     )
