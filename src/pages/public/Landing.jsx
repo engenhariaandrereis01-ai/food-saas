@@ -3,25 +3,39 @@ import { Link } from 'react-router-dom'
 import {
     ChefHat, Smartphone, CreditCard, BarChart3, ArrowRight, Check,
     X, MessageCircle, Star, Users, TrendingUp, Shield, Clock, Zap,
-    ChevronDown, ChevronUp
+    ChevronDown, ChevronUp, UtensilsCrossed, Truck, ClipboardList, Monitor
 } from 'lucide-react'
 
 export function Landing() {
     const [faqAberto, setFaqAberto] = useState(null)
 
+    // Módulos do Sistema
+    const modulos = [
+        { icon: Smartphone, title: 'Cardápio Digital', desc: 'QR Code na mesa, cliente visualiza e escolhe', cor: 'bg-blue-500/20 text-blue-400' },
+        { icon: Truck, title: 'App Delivery', desc: 'Receba pedidos online sem taxas abusivas', cor: 'bg-green-500/20 text-green-400' },
+        { icon: UtensilsCrossed, title: 'App do Garçom', desc: 'Pedidos por mesa com leitura de QR Code', cor: 'bg-purple-500/20 text-purple-400' },
+        { icon: CreditCard, title: 'PDV Completo', desc: 'Caixa, sangria, suprimento, múltiplas formas de pagamento', cor: 'bg-orange-500/20 text-orange-400' },
+        { icon: ClipboardList, title: 'Gestão de Mesas', desc: 'Controle de ocupação, comandas e consumo', cor: 'bg-pink-500/20 text-pink-400' },
+        { icon: BarChart3, title: 'Dashboard', desc: 'Relatórios, métricas e gestão centralizada', cor: 'bg-cyan-500/20 text-cyan-400' },
+    ]
+
     const features = [
-        { icon: Smartphone, title: 'Cardápio Digital', desc: 'QR Code na mesa, cliente pede pelo celular' },
-        { icon: ChefHat, title: 'Pedidos em Tempo Real', desc: 'Receba pedidos direto no painel' },
-        { icon: CreditCard, title: 'Zero Taxa', desc: 'Sem comissão por pedido, diferente do iFood' },
-        { icon: BarChart3, title: 'Painel Completo', desc: 'Gerencie produtos, pedidos e clientes' }
+        { icon: Smartphone, title: 'Cardápio + Delivery', desc: 'Seus clientes pedem pelo celular, na mesa ou em casa' },
+        { icon: UtensilsCrossed, title: 'App do Garçom', desc: 'Garçom escaneia QR da mesa e lança pedidos' },
+        { icon: CreditCard, title: 'PDV Completo', desc: 'Caixa, sangria, suprimento e fechamento' },
+        { icon: BarChart3, title: 'Dashboard Inteligente', desc: 'Todos os pedidos em tempo real num só lugar' }
     ]
 
     const comparativo = [
         { recurso: 'Taxa por pedido', nos: 'R$ 0', ifood: '27%', rappi: '25%' },
-        { recurso: 'Mensalidade', nos: 'R$ 49,90', ifood: 'R$ 100+', rappi: 'R$ 79+' },
+        { recurso: 'Mensalidade', nos: 'Desde R$ 49,90', ifood: 'R$ 100+', rappi: 'R$ 79+' },
+        { recurso: 'Cardápio Digital', nos: true, ifood: true, rappi: true },
+        { recurso: 'App do Garçom', nos: true, ifood: false, rappi: false },
+        { recurso: 'PDV / Caixa', nos: true, ifood: false, rappi: false },
+        { recurso: 'Gestão de Mesas', nos: true, ifood: false, rappi: false },
+        { recurso: 'Comandas Integradas', nos: true, ifood: false, rappi: false },
         { recurso: 'Sua marca', nos: true, ifood: false, rappi: false },
         { recurso: 'Dados dos clientes', nos: true, ifood: false, rappi: false },
-        { recurso: 'Personalização', nos: true, ifood: false, rappi: false },
     ]
 
     const depoimentos = [
@@ -29,21 +43,21 @@ export function Landing() {
             nome: 'João Silva',
             negocio: 'Espetaria do Jão',
             cidade: 'São Paulo, SP',
-            texto: 'Triplicamos os pedidos em 30 dias. Melhor investimento que fiz!',
+            texto: 'Aposentei o bloquinho de papel! Agora o garçom usa o celular e o pedido já aparece na cozinha.',
             estrelas: 5
         },
         {
             nome: 'Maria Oliveira',
             negocio: 'Pizzaria Bella',
             cidade: 'Rio de Janeiro, RJ',
-            texto: 'Economizamos mais de R$ 3.000/mês só em taxas de marketplace.',
+            texto: 'Economizamos R$ 3.000/mês em taxas e ainda ganhamos PDV e controle de mesas!',
             estrelas: 5
         },
         {
             nome: 'Carlos Santos',
             negocio: 'Burger House',
             cidade: 'Belo Horizonte, MG',
-            texto: 'O cliente escaneia, pede e eu só preparo. Simples assim!',
+            texto: 'Delivery e salão integrados. Nunca mais perdi um pedido!',
             estrelas: 5
         }
     ]
@@ -53,21 +67,21 @@ export function Landing() {
             nome: 'Trial',
             preco: 'Grátis',
             periodo: '14 dias',
-            recursos: ['Cardápio digital', 'Até 20 produtos', 'Pedidos ilimitados', 'Suporte por email'],
+            recursos: ['Cardápio digital', 'App do Garçom', 'Até 20 produtos', 'Pedidos ilimitados', 'Suporte por email'],
             destaque: false
         },
         {
             nome: 'Básico',
             preco: 'R$ 49,90',
             periodo: '/mês',
-            recursos: ['Cardápio digital', 'Até 50 produtos', 'Pedidos ilimitados', 'Personalização completa', 'Suporte por email'],
+            recursos: ['Tudo do Trial +', 'Até 50 produtos', 'PDV Completo', 'Gestão de Mesas', 'Personalização completa'],
             destaque: true
         },
         {
             nome: 'Profissional',
             preco: 'R$ 99,90',
             periodo: '/mês',
-            recursos: ['Produtos ilimitados', 'Pedidos ilimitados', 'Relatórios avançados', 'Múltiplos usuários', 'Suporte prioritário'],
+            recursos: ['Tudo do Básico +', 'Produtos ilimitados', 'Relatórios avançados', 'Múltiplos usuários', 'Suporte prioritário'],
             destaque: false
         }
     ]
@@ -92,6 +106,14 @@ export function Landing() {
         {
             pergunta: 'Funciona no meu celular?',
             resposta: 'Sim! O painel funciona em qualquer dispositivo com internet: celular, tablet ou computador.'
+        },
+        {
+            pergunta: 'O app do garçom funciona offline?',
+            resposta: 'O app precisa de internet para enviar os pedidos em tempo real, mas funciona em qualquer celular com navegador.'
+        },
+        {
+            pergunta: 'Posso usar só o delivery ou só o controle de mesas?',
+            resposta: 'Sim! Você ativa apenas os módulos que precisa. Restaurante só delivery? Só mesas? Os dois? Você escolhe.'
         }
     ]
 
@@ -125,14 +147,15 @@ export function Landing() {
                         🎉 +500 restaurantes já usam
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                        Pare de pagar <span className="text-red-400 line-through">27% de taxa</span> pro iFood
+                        Sistema completo para seu restaurante:
+                        <span className="text-[#D4AF37]"> do cardápio ao caixa</span>
                     </h1>
                     <p className="text-xl text-gray-400 mb-4">
-                        Tenha seu próprio cardápio digital e receba pedidos
-                        <span className="text-[#D4AF37] font-bold"> sem pagar comissão</span>
+                        Cardápio digital, delivery, app do garçom, PDV e gestão de mesas
+                        <span className="text-[#D4AF37] font-bold"> — tudo sem taxas abusivas</span>
                     </p>
                     <p className="text-gray-500 mb-8">
-                        QR Code na mesa → Cliente pede pelo celular → Você recebe na hora
+                        Chega de pagar 27% pro iFood. Tenha sua própria plataforma completa.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
@@ -153,7 +176,29 @@ export function Landing() {
                 </div>
             </section>
 
-            {/* Comparativo com concorrentes */}
+            {/* Módulos do Sistema */}
+            <section className="py-16 px-4 bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a]">
+                <div className="max-w-6xl mx-auto">
+                    <h2 className="text-3xl font-bold text-center mb-4">
+                        Tudo que seu restaurante precisa
+                    </h2>
+                    <p className="text-gray-400 text-center mb-12">6 módulos integrados em uma única plataforma</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {modulos.map((m, i) => (
+                            <div key={i} className="bg-[#0a0a0a]/50 backdrop-blur rounded-xl p-6 border border-gray-800 hover:border-[#D4AF37]/50 transition group">
+                                <div className={`w-14 h-14 rounded-xl ${m.cor.split(' ')[0]} flex items-center justify-center mb-4 group-hover:scale-110 transition`}>
+                                    <m.icon size={28} className={m.cor.split(' ')[1]} />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">{m.title}</h3>
+                                <p className="text-gray-400">{m.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+
             <section className="py-16 px-4 bg-[#1a1a1a]">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-3xl font-bold text-center mb-4">
