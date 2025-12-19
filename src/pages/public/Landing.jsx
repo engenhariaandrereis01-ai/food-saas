@@ -30,6 +30,7 @@ export function Landing() {
         { recurso: 'Taxa por pedido', nos: 'R$ 0', ifood: '27%', rappi: '25%' },
         { recurso: 'Mensalidade', nos: 'Desde R$ 49,90', ifood: 'R$ 100+', rappi: 'R$ 79+' },
         { recurso: 'Cardápio Digital', nos: true, ifood: true, rappi: true },
+        { recurso: 'App Delivery', nos: true, ifood: true, rappi: true },
         { recurso: 'App do Garçom', nos: true, ifood: false, rappi: false },
         { recurso: 'PDV / Caixa', nos: true, ifood: false, rappi: false },
         { recurso: 'Gestão de Mesas', nos: true, ifood: false, rappi: false },
