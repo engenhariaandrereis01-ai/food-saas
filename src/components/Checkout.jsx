@@ -27,7 +27,7 @@ export function Checkout({ carrinho, total, taxaEntrega, enderecoEntrega, onVolt
         // Gerar código PIX estático (simulado)
         // Em produção, usar API do Mercado Pago ou outro gateway
         const chave = config?.pix_chave || '27999999999'
-        const nome = config?.nome_restaurante || 'Imperio das Porcoes'
+        const nome = config?.nome_restaurante || 'Meu Restaurante'
         const cidade = 'Cariacica'
         const valor = total.toFixed(2)
 

@@ -67,7 +67,7 @@ export function Landing() {
             nome: 'Trial',
             preco: 'Grátis',
             periodo: '14 dias',
-            recursos: ['Cardápio digital', 'App do Garçom', 'Até 20 produtos', 'Pedidos ilimitados', 'Suporte por email'],
+            recursos: ['Cardápio digital', 'App Delivery', 'App do Garçom', 'Até 20 produtos', 'Pedidos ilimitados'],
             destaque: false
         },
         {

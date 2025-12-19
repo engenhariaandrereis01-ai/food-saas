@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { ShoppingBag, Plus, Minus, X, Send, CreditCard, Clock, Gift, MapPin, ChevronRight, Store, User, Check } from 'lucide-react'
 import { Checkout } from '../components/Checkout'
 
-const LOGO_URL = 'https://cxhypcvdijqauaibcgyp.supabase.co/storage/v1/object/public/produtos/logo-imperio.png'
+const LOGO_URL = null // Logo será carregada das configurações do restaurante
 const PORCAO_URL = 'https://cxhypcvdijqauaibcgyp.supabase.co/storage/v1/object/public/produtos/porcao-destaque.jpg'
 
 const LOCALIZACAO = {

@@ -23,7 +23,7 @@ export function Garcom() {
     const mesaParam = searchParams.get('mesa')
 
     // Senha de acesso para garçons
-    const SENHA_GARCOM = 'imperio123'
+    const SENHA_GARCOM = 'garcom123'
 
     const [mesas, setMesas] = useState([])
     const [mesaSelecionada, setMesaSelecionada] = useState(null)

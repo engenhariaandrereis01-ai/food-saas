@@ -344,7 +344,7 @@ export function Pedidos() {
                     </div>
 
                     <div class="footer">
-                        <p>www.imperiodasporcoes.com.br</p>
+                        <p>www.foodsaas.com.br</p>
                     </div>
 
                     <script>

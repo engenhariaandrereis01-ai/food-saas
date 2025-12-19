@@ -163,7 +163,7 @@ export function Comandas() {
 
                     <div class="footer">
                         <p>Obrigado pela preferência!</p>
-                        <p>www.imperiodasporcoes.com.br</p>
+                        <p>www.foodsaas.com.br</p>
                     </div>
 
                     <script>
