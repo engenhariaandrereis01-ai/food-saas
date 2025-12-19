@@ -57,18 +57,36 @@ export const PLANOS = {
         nome: 'Trial',
         preco: 0,
         limiteProdutos: 20,
-        recursos: ['Até 20 produtos', 'Cardápio digital', 'Pedidos básicos']
+        recursos: [
+            'Cardápio digital',
+            'App Delivery',
+            'App do Garçom',
+            'Até 20 produtos',
+            'Pedidos ilimitados'
+        ]
     },
     basico: {
         nome: 'Básico',
         preco: 49.90,
         limiteProdutos: 50,
-        recursos: ['Até 50 produtos', 'Cardápio digital', 'Pedidos ilimitados', 'Suporte por email']
+        recursos: [
+            'Tudo do Trial +',
+            'Até 50 produtos',
+            'PDV Completo',
+            'Gestão de Mesas',
+            'Personalização completa'
+        ]
     },
     pro: {
         nome: 'Profissional',
         preco: 99.90,
         limiteProdutos: -1, // ilimitado
-        recursos: ['Produtos ilimitados', 'Cardápio digital', 'Pedidos ilimitados', 'Relatórios avançados', 'Suporte prioritário', 'Múltiplos usuários']
+        recursos: [
+            'Tudo do Básico +',
+            'Produtos ilimitados',
+            'Relatórios avançados',
+            'Múltiplos usuários',
+            'Suporte prioritário'
+        ]
     }
 }
