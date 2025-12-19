@@ -64,23 +64,15 @@ export function Billing() {
     const iniciarCheckout = async (tipoPlano) => {
         setCheckoutLoading(true)
         try {
-            const response = await fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                    },
-                    body: JSON.stringify({
-                        tenant_id: tenantId,
-                        plano: tipoPlano,
-                        user_email: userEmail,
-                    }),
+            const { data, error } = await supabase.functions.invoke('create-checkout', {
+                body: {
+                    tenant_id: tenantId,
+                    plano: tipoPlano,
+                    user_email: userEmail,
                 }
-            )
+            })
 
-            const data = await response.json()
+            if (error) throw error
 
             if (data.url) {
                 window.location.href = data.url
@@ -89,7 +81,7 @@ export function Billing() {
             }
         } catch (error) {
             console.error('Erro no checkout:', error)
-            setMensagem({ tipo: 'erro', texto: 'Erro ao conectar com o servidor' })
+            setMensagem({ tipo: 'erro', texto: 'Erro ao conectar com o servidor de pagamento' })
         } finally {
             setCheckoutLoading(false)
         }
@@ -99,21 +91,13 @@ export function Billing() {
     const abrirPortal = async () => {
         setPortalLoading(true)
         try {
-            const response = await fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-portal`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                    },
-                    body: JSON.stringify({
-                        tenant_id: tenantId,
-                    }),
+            const { data, error } = await supabase.functions.invoke('customer-portal', {
+                body: {
+                    tenant_id: tenantId,
                 }
-            )
+            })
 
-            const data = await response.json()
+            if (error) throw error
 
             if (data.url) {
                 window.location.href = data.url
@@ -122,7 +106,7 @@ export function Billing() {
             }
         } catch (error) {
             console.error('Erro no portal:', error)
-            setMensagem({ tipo: 'erro', texto: 'Erro ao conectar com o servidor' })
+            setMensagem({ tipo: 'erro', texto: 'Erro ao conectar com o servidor de pagamento' })
         } finally {
             setPortalLoading(false)
         }
@@ -146,8 +130,8 @@ export function Billing() {
             {/* Mensagens de feedback */}
             {mensagem && (
                 <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${mensagem.tipo === 'sucesso' ? 'bg-green-500/20 text-green-400' :
-                        mensagem.tipo === 'erro' ? 'bg-red-500/20 text-red-400' :
-                            'bg-blue-500/20 text-blue-400'
+                    mensagem.tipo === 'erro' ? 'bg-red-500/20 text-red-400' :
+                        'bg-blue-500/20 text-blue-400'
                     }`}>
                     {mensagem.tipo === 'sucesso' ? <CheckCircle size={20} /> :
                         mensagem.tipo === 'erro' ? <XCircle size={20} /> :
